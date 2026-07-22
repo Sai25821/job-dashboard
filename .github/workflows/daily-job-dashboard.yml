@@ -1,0 +1,48 @@
+name: Daily Job Dashboard
+
+on:
+  schedule:
+    - cron: "35 10 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install node-fetch@2
+
+      - name: Generate dashboard
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_ACTOR_ID: curious_coder~linkedin-jobs-scraper
+        run: node scripts/generate-dashboard.js
+
+      - name: Commit updated dashboard
+        run: |
+          git config user.name "job-dashboard-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add index.html data/summary.json data/jobs.json data/email-body.html
+          git commit -m "Daily job dashboard update $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Daily Job Matches - ${{ github.run_id }}"
+          to: ${{ secrets.MAIL_TO }}
+          from: Job Dashboard Bot
+          html_body: file://data/email-body.html
