@@ -1,0 +1,12 @@
+{
+  "name": "job-dashboard",
+  "version": "1.0.0",
+  "description": "Daily job match dashboard powered by Apify",
+  "main": "scripts/generate-dashboard.js",
+  "scripts": {
+    "generate": "node scripts/generate-dashboard.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
