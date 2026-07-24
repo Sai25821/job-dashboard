@@ -11,7 +11,12 @@ const SENIOR = ['senior','lead','principal','engineering manager','director','he
 async function getJobs() {
   const r = await fetch(`https://api.apify.com/v2/acts/${ACTOR_ID}/runs?token=${TOKEN}&desc=true&limit=1&status=SUCCEEDED`);
   const j = await r.json();
-  const dsId = j.data.items[0].defaultDatasetId;
+  const items = j && j.data && j.data.items;
+  if (!items || !items.length) {
+    console.warn('No succeeded Apify runs found; skipping this run.');
+    return [];
+  }
+  const dsId = items[0].defaultDatasetId;
   const d = await fetch(`https://api.apify.com/v2/datasets/${dsId}/items?token=${TOKEN}&format=json&clean=true`);
   return d.json();
 }
